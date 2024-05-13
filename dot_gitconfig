@@ -1,0 +1,7 @@
+[user]
+	email = santiago.libonati@gmail.com
+	name = Santiago Libonati
+[init]
+	defaultBranch = main
+[core]
+	editor = /usr/bin/nvim

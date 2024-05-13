@@ -1,0 +1,136 @@
+#
+# ~/.bash_aliases
+#
+
+wh(){
+    firefox --new-window https://web.whatsapp.com/ </dev/null &>/dev/null &
+    disown
+    exit
+}
+disc(){
+    firefox --new-window https://discord.com/channels/@me </dev/null &>/dev/null &
+    disown
+    exit
+}
+
+function alert2 () {
+  ICON=$([ $? = 0 ] && echo terminal || echo error);
+  MSG=$(history | tail -n1| sed -e 's/^\s*[0-9]\+\s*//;s/[;&|]\s*alert2$//');
+  notify-send --urgency=low -i "$ICON" "$MSG";
+}
+
+
+
+# Alias
+
+alias ls='ls --color=auto -v'
+alias la='ls --color=auto -va'
+alias ll='ls --color=auto -vl'
+alias lla='ls --color=auto -vla'
+alias tree='tree -Cv'
+alias grep='grep --color=auto'
+alias fz='cd $(fzf --walker-root="$HOME" --walker-skip=".cabal,.ghcup,.mozilla,.stack,.var" | sed "s|\(.*\)/.*|\1|")'
+
+# Trash stuff
+
+export MYTRASH_HOME=$HOME/.local/share/myTrash
+if test ! -d "$MYTRASH_HOME"; then
+  echo "Creating myTrash directory\n"
+  mkdir -p "$MYTRASH_HOME"
+  mkdir "$MYTRASH_HOME/files"
+fi
+
+if test ! -f "$MYTRASH_HOME/recycle_log"; then
+  touch "$MYTRASH_HOME/recycle_log"
+fi
+
+trash(){
+  if test "$#" = 0; then
+    printf "${RED}error -- no files provided\n${RESET}"
+    return -1
+  fi
+  
+  local count=0
+
+  for file in "$@"; do
+    echo "moving $file to $MYTRASH_HOME/files"
+
+    echo "$(readlink -f "$file")" >> "$MYTRASH_HOME/recycle_log"
+
+    mv "$file" "$MYTRASH_HOME/files"
+    if test "$?" = 0; then
+      ((count++))
+    else
+      printf "${RED}failed to move $file to trash\n${RESET}"
+    fi
+  done
+}
+
+empty-trash(){
+  read -p "Are you sure? (y/n): " -n 1 -r
+  echo    # (optional) move to a new line
+  if [[ $REPLY =~ ^[Yy]$ ]]
+  then
+    echo "Emptying the trash bin"
+    rm -r "$MYTRASH_HOME/files"
+    mkdir "$MYTRASH_HOME/files"
+
+    rm "$MYTRASH_HOME/recycle_log"
+    touch "$MYTRASH_HOME/recycle_log"
+  fi
+}
+
+untrash(){
+  cd "$MYTRASH_HOME/files/"
+  if [[ ! "$?" = 0  ]]; then
+    printf "${RED}trash/files doesnt exist\n${RESET}"
+    return -1
+  fi
+
+  if test "$#" = 0; then
+    bat "../recycle_log"
+
+    cd - > /dev/null
+    return 0
+  fi
+
+
+  for name in "$@"; do
+    local file=$(grep "/${name}\$" "$MYTRASH_HOME/recycle_log")
+    if test $file = ''; then
+      printf "${RED}no item '$file' in the trash\n${RESET}"
+      continue
+    fi
+    mv -i $name "$file"
+    if test "$?" = 0; then
+      printf "moved '$name' to '$file'\n"
+      sed -i "/\/${name}\$/ d" "$MYTRASH_HOME/recycle_log"
+    else
+      printf "${RED}failed to restore file\n${RESET}"
+    fi
+  done
+
+  cd - > /dev/null
+}
+
+_untrash()
+{
+    local files=()
+    
+    for file in "$MYTRASH_HOME/files"/*; do
+        if [ "$file" = "$MYTRASH_HOME/files/*" ]; then
+            continue
+        fi
+        
+        local filename="${file##*/}"
+        if [[ $filename = "$2"* ]]; then
+          files+=("$filename")
+        fi
+    done
+    
+    if test "$3" = "$1"; then
+      COMPREPLY=( "${files[@]}" )
+    fi
+    return 0
+}
+complete -F _untrash untrash

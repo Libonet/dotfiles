@@ -1,0 +1,127 @@
+#
+# ~/.bashrc
+#
+
+# If not running interactively, don't do anything
+[[ $- != *i* ]] && return
+
+# run .bash_aliases if it exists
+if [ -f ~/.bash_aliases ]; then
+  . ~/.bash_aliases 
+fi
+
+BLUE="\[\e[1;34m\]"
+GREEN="\[\033[01;32m\]"
+WHITE="\[\e[0;37m\]"
+YELLOW="\[\033[38;5;226m\]"
+TIME="\[\033[38;5;203m\]\t"
+
+RED="\e[1;31m"
+RESET="\e[0m"
+
+parse_git_branch () { 
+  local branch="$(git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/')"
+  if test ! $branch; then
+    echo ''
+  else
+    echo " $branch "
+  fi
+}
+
+PS1="[${TIME} ${BLUE}\u@\h ${WHITE}@ ${GREEN}\w${YELLOW}"'$(parse_git_branch)'"${WHITE}]\n$ "
+
+
+startSshAgent(){
+  env=~/.ssh/agent.env
+
+  agent_load_env () { test -f "$env" && . "$env" >| /dev/null ; }
+
+  agent_start () {
+      (umask 077; ssh-agent >| "$env")
+      . "$env" >| /dev/null ; }
+
+  agent_load_env
+
+  # agent_run_state: 0=agent running w/ key; 1=agent w/o key; 2=agent not running
+  agent_run_state=$(ssh-add -l >| /dev/null 2>&1; echo $?)
+
+  if [ ! "$SSH_AUTH_SOCK" ] || [ $agent_run_state = 2 ]; then
+      agent_start
+      ssh-add -t 300
+  elif [ "$SSH_AUTH_SOCK" ] && [ $agent_run_state = 1 ]; then
+      ssh-add -t 300
+  fi
+
+  unset env
+}
+
+eval "$(zoxide init bash)"
+eval "$(fzf --bash)"
+
+# if .ghcup/env exists, run it
+[ -f "/home/slibo/.ghcup/env" ] && . "/home/slibo/.ghcup/env" # ghcup-env
+
+export XDG_CONFIG_HOME=$HOME/.config
+export XDG_CACHE_HOME=$HOME/.cache
+export XDG_DATA_HOME=$HOME/.local/share
+
+# # Use bash-completion, if available
+# if [[ $PS1 && -f /usr/share/bash-completion/bash_completion ]]; then
+#   . /usr/share/bash-completion/bash_completion
+# fi
+
+# Options to fzf command
+export FZF_COMPLETION_OPTS='--border --info=inline'
+
+
+# Preview file content using bat (https://github.com/sharkdp/bat)
+export FZF_CTRL_T_OPTS="
+  --walker-skip .git,node_modules,target
+  --preview 'bat -n --color=always {}'
+  --bind 'ctrl-/:change-preview-window(down|hidden|)'"
+
+# CTRL-/ to toggle small preview window to see the full command
+# CTRL-Y to copy the command into clipboard using pbcopy
+export FZF_CTRL_R_OPTS="
+  --preview 'echo {}' --preview-window up:3:hidden:wrap
+  --bind 'ctrl-/:toggle-preview'
+  --bind 'ctrl-y:execute-silent(echo -n {2..} | pbcopy)+abort'
+  --color header:italic
+  --header 'Press CTRL-Y to copy command into clipboard'"
+
+# Print tree structure in the preview window
+export FZF_ALT_C_OPTS="
+  --walker-skip .git,node_modules,target
+  --preview 'tree -C {}'"
+
+# Use fd (https://github.com/sharkdp/fd) for listing path candidates.
+# - The first argument to the function ($1) is the base path to start traversal
+# - See the source code (completion.{bash,zsh}) for the details.
+_fzf_compgen_path() {
+  fd --hidden --follow --exclude ".git" -E ".cabal" -E ".stack" -E ".ghcup" . "$1"
+}
+
+# Use fd to generate the list for directory completion
+_fzf_compgen_dir() {
+  fd --type d --hidden --follow --exclude ".git" -E ".cabal" -E ".stack" -E ".ghcup" . "$1"
+}
+
+# Advanced customization of fzf options via _fzf_comprun function
+# - The first argument to the function is the name of the command.
+# - You should make sure to pass the rest of the arguments to fzf.
+_fzf_comprun() {
+  local command=$1
+  shift
+
+  case "$command" in
+    cd)           fzf --preview 'tree -C {} | head -200'   "$@" ;;
+    export|unset) fzf --preview "eval 'echo \$'{}"         "$@" ;;
+    ssh)          fzf --preview 'dig {}'                   "$@" ;;
+    *)            fzf --preview 'bat -n --color=always {}' "$@" ;;
+  esac
+}
+
+export EDITOR="/usr/bin/nvim"
+export VISUAL="/usr/bin/nvim"
+
+
