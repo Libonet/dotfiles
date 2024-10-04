@@ -19,17 +19,50 @@ function alert2 () {
   notify-send --urgency=low -i "$ICON" "$MSG";
 }
 
-
-
 # Alias
+
+# [ "$TERM" = "xterm-kitty" ] && alias ssh="kitty +kitten ssh"
 
 alias ls='ls --color=auto -v'
 alias la='ls --color=auto -va'
 alias ll='ls --color=auto -vl'
 alias lla='ls --color=auto -vla'
 alias tree='tree -Cv'
+alias stree='tree -Cv --gitignore'
 alias grep='grep --color=auto'
 alias fz='cd $(fzf --walker-root="$HOME" --walker-skip=".cabal,.ghcup,.mozilla,.stack,.var" | sed "s|\(.*\)/.*|\1|")'
+alias my_reflector='sudo reflector --verbose -l 100 -n 20 --sort rate --save /etc/pacman.d/mirrorlist'
+
+# Backup Noita
+
+export NOITA_SAVE_DIR='/home/slibo/.local/share/Steam/steamapps/compatdata/881100/pfx/drive_c/users/steamuser/AppData/LocalLow/Nolla_Games_Noita'
+export NOITA_BACKUP_DIR='/home/slibo/Desktop/Noita_Backups'
+
+noita_backup(){
+  cd "$NOITA_BACKUP_DIR"
+  if test "$?" != 0; then
+    echo "cd failed"
+    return -1
+  fi
+
+  if test "$#" = 0; then
+    local get_current_date=`date "+%Y-%m-%d %H:%M"`
+    local current_date="${get_current_date}"
+    mkdir "${current_date}"
+    if test "$?" != 0; then
+      echo "mkdir failed"
+      return -1
+    fi
+    cp -r "${NOITA_SAVE_DIR}/save00/" "${current_date}"
+  else
+    mkdir "$1"
+    if test "$?" != 0; then
+      echo "mkdir failed"
+      return -1
+    fi
+    cp -r "${NOITA_SAVE_DIR}/save00/" "$1"
+  fi
+}
 
 # Trash stuff
 

@@ -5,3 +5,8 @@
 	defaultBranch = main
 [core]
 	editor = /usr/bin/nvim
+[alias]
+	co = commit
+	br = branch
+	st = status
+	sch = switch
