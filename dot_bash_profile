@@ -3,3 +3,7 @@
 #
 
 [[ -f ~/.bashrc ]] && . ~/.bashrc
+. "$HOME/.cargo/env"
+
+# Created by `pipx` on 2024-12-14 04:25:55
+export PATH="$PATH:/home/slibo/.local/bin"

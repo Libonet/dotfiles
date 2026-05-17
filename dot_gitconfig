@@ -6,7 +6,9 @@
 [core]
 	editor = /usr/bin/nvim
 [alias]
-	co = commit
+	co = checkout
 	br = branch
 	st = status
 	sch = switch
+	adog = log --all --decorate --oneline --graph
+	ci = commit

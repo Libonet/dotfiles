@@ -7,11 +7,6 @@ wh(){
     disown
     exit
 }
-disc(){
-    firefox --new-window https://discord.com/channels/@me </dev/null &>/dev/null &
-    disown
-    exit
-}
 
 function alert2 () {
   ICON=$([ $? = 0 ] && echo terminal || echo error);
@@ -23,10 +18,10 @@ function alert2 () {
 
 # [ "$TERM" = "xterm-kitty" ] && alias ssh="kitty +kitten ssh"
 
-alias ls='ls --color=auto -v'
-alias la='ls --color=auto -va'
-alias ll='ls --color=auto -vl'
-alias lla='ls --color=auto -vla'
+alias ls='eza'
+alias la='eza -a'
+alias ll='eza -l'
+alias lla='eza -la'
 alias tree='tree -Cv'
 alias stree='tree -Cv --gitignore'
 alias grep='grep --color=auto'
