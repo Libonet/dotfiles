@@ -1,0 +1,17 @@
+#image=~/Pictures/Wallpapers/BlueBlood.png
+show-failed-attempts
+color=1f1f28
+daemonize
+ignore-empty-password
+font=0xProto Nerd Font
+font-size=24
+text-color=dcd7ba
+indicator-idle-visible=false
+indicator-caps-lock
+scaling=fill
+
+# Doesnt work without effects fork
+clock
+timestr=%Hh %Mm %Ss
+datestr=%Y-%b-%d
+indicator
